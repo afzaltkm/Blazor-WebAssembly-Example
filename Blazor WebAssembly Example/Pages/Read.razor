@@ -1,0 +1,76 @@
+﻿@page "/Read"
+
+<h1 class="bg-info text-white">Read Students</h1>
+
+<NavLink class="btn btn-primary" href="Create">Create Student</NavLink>
+<NavLink class="btn btn-secondary" href="Get">Get Student</NavLink>
+
+<table class="table table-sm table-striped table-bordered m-2">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Start Location</th>
+            <th>End Location</th>
+            <th>Update</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Student r in Students)
+        {
+            <tr>
+                <td>@r.Id</td>
+                <td>@r.Name</td>
+                <td>@r.Course</td>
+                <td>@r.Year</td>
+                <td>
+                    <a href="Update/@r.Id">
+                        <img src="/icon/edit.png" />
+                    </a>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-danger" @onclick="@(() => Delete(r))">
+                        <img src="/icon/close.png" />
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Inject]
+    public NavigationManager NV { get; set; }
+
+    public IEnumerable<Student> Students { get; set; } = Enumerable.Empty<Student>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await CallAPI();
+    }
+
+    async Task CallAPI()
+    {
+        using (var httpClient = new HttpClient())
+        {
+            using (var response = await httpClient.GetAsync("http://localhost:8888/api/Student"))
+            {
+                string apiResponse = await response.Content.ReadAsStringAsync();
+                Students = JsonConvert.DeserializeObject<List<Student>>(apiResponse);
+            }
+        }
+    }
+
+    public async Task Delete(Student r)
+    {
+        using (var httpClient = new HttpClient())
+        {
+            using (var response = await httpClient.DeleteAsync("http://localhost:8888/api/Student/" + r.Id))
+            {
+                string apiResponse = await response.Content.ReadAsStringAsync();
+            }
+        }
+        await CallAPI();
+    }
+}
